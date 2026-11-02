@@ -1,0 +1,1081 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+<meta name="theme-color" content="#0B1F17">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Poker Night">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<title>Poker Night</title>
+<style>
+:root{
+  --bg:#0B1F17; --felt:#0F3D2E; --card:#12271E; --card2:#183328; --line:#24463A;
+  --text:#EEF3EF; --mute:#94AC9F; --gold:#E8C26A; --gold2:#C9A04A;
+  --up:#4ADE80; --down:#F87171; --warn:#FBBF24;
+  --r:16px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+body{min-height:100vh;padding:calc(env(safe-area-inset-top) + 12px) 16px calc(env(safe-area-inset-bottom) + 92px)}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+input,select{font:inherit;color:var(--text);background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px;width:100%}
+input:focus{outline:2px solid var(--gold2);border-color:transparent}
+.wrap{max-width:640px;margin:0 auto}
+h1{font-size:26px;margin:4px 0 14px;letter-spacing:-.3px}
+h2{font-size:15px;color:var(--mute);text-transform:uppercase;letter-spacing:.08em;margin:22px 0 8px;font-weight:600}
+.top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:10px}
+.felt{background:radial-gradient(120% 140% at 50% 0%,#17573F 0%,var(--felt) 55%,#0C3326 100%);border-color:#2B6A52}
+.muted{color:var(--mute)} .small{font-size:13px} .up{color:var(--up)} .down{color:var(--down)} .gold{color:var(--gold)}
+.row{display:flex;align-items:center;gap:10px}
+.grow{flex:1;min-width:0}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:11px 16px;border-radius:12px;background:var(--card2);border:1px solid var(--line);font-weight:600;white-space:nowrap}
+.btn.pri{background:var(--gold);color:#1A1406;border-color:var(--gold)}
+.btn.danger{color:var(--down)}
+.btn.sm{padding:8px 12px;font-size:14px;border-radius:10px}
+.btn.block{width:100%}
+.btn:active{transform:scale(.97)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.stat{background:rgba(0,0,0,.22);border-radius:12px;padding:10px}
+.stat b{display:block;font-size:19px}
+.stat span{font-size:12px;color:var(--mute)}
+.pill{display:inline-block;font-size:12px;font-weight:700;padding:3px 8px;border-radius:99px;background:var(--card2)}
+.pill.live{background:#14532D;color:#86EFAC}
+.pill.final{background:#3A2E12;color:var(--gold)}
+.pl{display:flex;align-items:center;gap:10px;padding:12px 0;border-top:1px solid var(--line)}
+.pl:first-child{border-top:0}
+.pl-name{text-align:left;flex:1;min-width:0}
+.pl-name b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pl-name small{color:var(--mute);font-size:13px}
+.net{font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
+.av{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:800;background:var(--card2);color:var(--gold);flex:none}
+.tabs{position:fixed;left:0;right:0;bottom:0;background:rgba(11,31,23,.96);backdrop-filter:blur(10px);border-top:1px solid var(--line);display:flex;padding:6px 6px calc(env(safe-area-inset-bottom) + 6px);z-index:5}
+.tabs button{flex:1;padding:6px 0;font-size:11px;color:var(--mute);display:flex;flex-direction:column;align-items:center;gap:2px}
+.tabs button i{font-style:normal;font-size:21px;line-height:1}
+.tabs button.on{color:var(--gold)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{padding:8px 12px;border-radius:99px;border:1px solid var(--line);background:var(--card2);font-weight:600;font-size:14px}
+.chip.on{background:var(--gold);color:#1A1406;border-color:var(--gold)}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:13px;color:var(--mute);margin-bottom:5px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sheet-wrap{position:fixed;inset:0;z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheet-wrap[hidden]{display:none}
+.sheet-bg{position:absolute;inset:0;background:rgba(0,0,0,.55)}
+.sheet{position:relative;width:100%;max-width:560px;max-height:88vh;overflow:auto;background:var(--card);border:1px solid var(--line);border-bottom:0;border-radius:20px 20px 0 0;padding:18px 16px calc(env(safe-area-inset-bottom) + 18px)}
+.sheet h3{margin:0 0 4px;font-size:20px}
+.sheet .sub{color:var(--mute);font-size:14px;margin-bottom:14px}
+.acts{display:flex;gap:8px;margin-top:14px}
+.acts .btn{flex:1}
+.err{color:var(--down);font-size:14px;min-height:18px;margin-top:6px}
+.warn{background:#3A2E0E;border:1px solid #6B5317;color:#FDE68A;border-radius:12px;padding:10px 12px;font-size:14px;margin:10px 0}
+.wtxt{color:var(--warn)}
+.ok{background:#0F3322;border:1px solid #1F6B45;color:#A7F3C8;border-radius:12px;padding:10px 12px;font-size:14px;margin:10px 0}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom) + 84px);background:#F4F1E6;color:#16120A;border-radius:12px;padding:10px 12px 10px 16px;display:flex;gap:12px;align-items:center;font-weight:600;font-size:14px;z-index:30;box-shadow:0 8px 24px rgba(0,0,0,.4);max-width:calc(100% - 32px)}
+.toast[hidden]{display:none}
+.toast button{color:#7A5A12;font-weight:800}
+.lb{display:flex;align-items:center;gap:10px;padding:12px 0;border-top:1px solid var(--line);width:100%;text-align:left}
+.lb:first-child{border-top:0}
+.rank{width:22px;text-align:center;font-weight:800;color:var(--mute);flex:none}
+.bar{height:5px;border-radius:3px;background:rgba(255,255,255,.07);margin-top:6px;position:relative;overflow:hidden}
+.bar i{position:absolute;top:0;bottom:0;border-radius:3px}
+.awards{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.award{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.award .e{font-size:20px}
+.award b{display:block;font-size:15px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.award span{font-size:12px;color:var(--mute)}
+.podium{display:grid;grid-template-columns:1fr 1.15fr 1fr;gap:8px;align-items:end;margin-bottom:10px}
+.pod{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:10px 6px;text-align:center}
+.pod .medal{font-size:24px}
+.pod b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pod.p1{padding:16px 6px;border-color:var(--gold2);background:linear-gradient(180deg,#3A2E12,var(--card2))}
+.hist{display:flex;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--line);width:100%;text-align:left}
+.hist:first-child{border-top:0}
+.date{width:46px;text-align:center;flex:none;background:var(--card2);border-radius:10px;padding:6px 0}
+.date b{display:block;font-size:18px;line-height:1.1}
+.date span{font-size:11px;color:var(--mute);text-transform:uppercase}
+.hero{text-align:center;padding:30px 16px}
+.hero .big{font-size:52px}
+.syncCard{display:flex;align-items:center;gap:10px}
+footer#syncFoot{text-align:center;color:var(--mute);font-size:12px;margin:24px 0 6px}
+.tx{display:flex;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--line)}
+.tx:first-child{border-top:0}
+.tx input{width:110px;padding:8px 10px}
+.x{width:36px;height:36px;border-radius:10px;background:var(--card2);color:var(--down);font-weight:800;flex:none}
+.link{color:var(--gold);font-weight:600}
+table.res{width:100%;border-collapse:collapse;font-size:15px}
+table.res td{padding:7px 0;border-top:1px solid var(--line)}
+table.res td:last-child{text-align:right}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<nav class="tabs" id="tabs"></nav>
+<div class="sheet-wrap" id="sheetWrap" hidden><div class="sheet-bg" data-act="closeSheet"></div><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+/* =====================================================================
+   POKER NIGHT — app state
+   S = { settings, players[], nights[], txns[] }   amounts are in cents
+   night: {id, date, name, buyIn, status:"open"|"closed", created, closedAt}
+   txn:   {id, date (= night date), night, player, kind:"buyin"|"rebuy"|"cashout", amt, t}
+   ===================================================================== */
+var STATE_KEY = "poker_state_v1";
+var S, loaded = false, TAB = "night", VIEW_NIGHT = null, LB_YEAR = "all";
+
+function defaults(){ return {settings:{buyIn:2000, cur:"$"}, players:[], nights:[], txns:[]}; }
+function normalize(st){
+  if(!st || typeof st !== "object") st = {};
+  st.settings = Object.assign({}, defaults().settings, st.settings || {});
+  ["players","nights","txns"].forEach(function(k){ if(!Array.isArray(st[k])) st[k] = []; });
+  return st;
+}
+S = normalize((function(){ try{ return JSON.parse(localStorage.getItem(STATE_KEY)); }catch(e){ return null; } })());
+
+function save(){
+  if(!loaded) return;
+  try{ localStorage.setItem(STATE_KEY, JSON.stringify(S)); }catch(e){}
+  cloudAfterSave();
+}
+function commit(){ save(); render(); }
+
+/* ---------- helpers ---------- */
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+function today(){ var d = new Date(); return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0"); }
+function money(c, signed){
+  c = Math.round(c || 0);
+  var a = Math.abs(c) / 100, s = a % 1 ? a.toFixed(2) : String(a), parts = s.split(".");
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  var sign = signed ? (c > 0 ? "+" : c < 0 ? "−" : "") : (c < 0 ? "−" : "");
+  return sign + S.settings.cur + parts.join(".");
+}
+function cls(c){ return c > 0 ? "up" : c < 0 ? "down" : "muted"; }
+function toCents(v){ v = String(v || "").replace(/[^0-9.]/g, ""); if(v === "" || isNaN(+v)) return null; return Math.round(parseFloat(v) * 100); }
+function dollars(c){ var a = (c || 0) / 100; return a % 1 ? a.toFixed(2) : String(a); }
+function niceDate(d, opts){ return new Date(d + "T12:00:00").toLocaleDateString(undefined, opts || {weekday:"short", month:"short", day:"numeric", year:"numeric"}); }
+function clock(t){ return new Date(t).toLocaleTimeString(undefined, {hour:"numeric", minute:"2-digit"}); }
+function initials(n){ var p = String(n || "?").trim().split(/\s+/); return ((p[0] || "?")[0] + (p[1] ? p[1][0] : "")).toUpperCase(); }
+function P(id){ return S.players.find(function(p){ return p.id === id; }); }
+function pname(id){ var p = P(id); return p ? p.name : "(removed)"; }
+function N(id){ return S.nights.find(function(n){ return n.id === id; }); }
+function openNight(){ return S.nights.filter(function(n){ return n.status === "open"; }).sort(function(a,b){ return b.date.localeCompare(a.date) || b.created - a.created; })[0] || null; }
+function byNight(){ var m = {}; S.txns.forEach(function(t){ (m[t.night] = m[t.night] || []).push(t); }); return m; }
+function nightTx(nid, idx){ return ((idx ? idx[nid] : S.txns.filter(function(t){ return t.night === nid; })) || []).slice().sort(function(a,b){ return a.t - b.t; }); }
+function nightRows(nid, idx){
+  var rows = {}, order = [];
+  nightTx(nid, idx).forEach(function(t){
+    var r = rows[t.player];
+    if(!r){ r = rows[t.player] = {player:t.player, buyin:0, rebuy:0, rebuys:0, out:0, last:null, joined:t.t}; order.push(t.player); }
+    if(t.kind === "buyin") r.buyin += t.amt;
+    else if(t.kind === "rebuy"){ r.rebuy += t.amt; r.rebuys++; }
+    else if(t.kind === "cashout") r.out += t.amt;
+    r.last = t.kind;
+  });
+  return order.map(function(id){ var r = rows[id]; r.in = r.buyin + r.rebuy; r.net = r.out - r.in; r.done = r.last === "cashout"; return r; });
+}
+function totals(rows){ var o = {in:0, out:0}; rows.forEach(function(r){ o.in += r.in; o.out += r.out; }); return o; }
+/* settle up: losers pay winners in the fewest transfers.
+   If chips out ≠ money in, winners absorb the difference pro rata so it adds up. */
+function settlePlan(rows){
+  var nets = rows.map(function(r){ return {p:r.player, v:r.net}; });
+  var diff = nets.reduce(function(a, x){ return a + x.v; }, 0);
+  if(diff){
+    var win = nets.filter(function(x){ return x.v > 0; }), wsum = win.reduce(function(a, x){ return a + x.v; }, 0);
+    if(wsum > 0){ var rem = diff; win.forEach(function(w, i){ var cut = i === win.length - 1 ? rem : Math.round(diff * w.v / wsum); w.v -= cut; rem -= cut; }); }
+  }
+  var cred = nets.filter(function(x){ return x.v > 0; }).sort(function(a,b){ return b.v - a.v; });
+  var debt = nets.filter(function(x){ return x.v < 0; }).map(function(x){ return {p:x.p, v:-x.v}; }).sort(function(a,b){ return b.v - a.v; });
+  var out = [], i = 0, j = 0;
+  while(i < debt.length && j < cred.length){
+    var a = Math.min(debt[i].v, cred[j].v);
+    if(a > 0) out.push({from:debt[i].p, to:cred[j].p, amt:a});
+    debt[i].v -= a; cred[j].v -= a;
+    if(!debt[i].v) i++; if(!cred[j].v) j++;
+  }
+  return {transfers:out, diff:diff};
+}
+function payKey(t){ return t.from + ">" + t.to + ":" + t.amt; }
+function unpaidCount(n, rows){ var pd = n.paid || {}; return settlePlan(rows).transfers.filter(function(t){ return !pd[payKey(t)]; }).length; }
+function addTx(night, player, kind, amt){
+  var t = {id:uid(), date:night.date, night:night.id, player:player, kind:kind, amt:amt, t:Date.now()};
+  S.txns.push(t); return t;
+}
+function findOrCreatePlayer(name){
+  name = String(name || "").trim().replace(/\s+/g, " ");
+  if(!name) return null;
+  var ex = S.players.find(function(p){ return p.name.toLowerCase() === name.toLowerCase(); });
+  if(ex) return ex;
+  var p = {id:uid(), name:name, created:Date.now()}; S.players.push(p); return p;
+}
+
+/* career stats over closed nights */
+function career(year){
+  var idx = byNight(), st = {};
+  S.nights.filter(function(n){ return n.status === "closed" && (year === "all" || n.date.slice(0,4) === year); })
+    .forEach(function(n){
+      nightRows(n.id, idx).forEach(function(r){
+        var s = st[r.player] || (st[r.player] = {player:r.player, net:0, nights:0, wins:0, losses:0, best:null, worst:null, rebuys:0, in:0});
+        s.net += r.net; s.nights++; s.rebuys += r.rebuys; s.in += r.in;
+        if(r.net > 0) s.wins++; else if(r.net < 0) s.losses++;
+        if(s.best === null || r.net > s.best) s.best = r.net;
+        if(s.worst === null || r.net < s.worst) s.worst = r.net;
+      });
+    });
+  return Object.keys(st).map(function(k){ return st[k]; }).sort(function(a,b){ return b.net - a.net || b.nights - a.nights; });
+}
+
+/* ---------- toast ---------- */
+var toastTimer = null, toastUndo = null;
+function toast(msg, undo){
+  var el = document.getElementById("toast");
+  toastUndo = undo || null;
+  el.innerHTML = "<span>" + esc(msg) + "</span>" + (undo ? '<button data-act="undo">Undo</button>' : "");
+  el.hidden = false; clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ el.hidden = true; toastUndo = null; }, 4500);
+}
+
+/* ---------- sheets ---------- */
+function openSheet(html){
+  SYNC.hold = true;
+  document.getElementById("sheet").innerHTML = html;
+  document.getElementById("sheetWrap").hidden = false;
+}
+function closeSheet(){
+  document.getElementById("sheetWrap").hidden = true;
+  document.getElementById("sheet").innerHTML = "";
+  releaseHold();
+}
+function sheetErr(msg){ var e = document.getElementById("sErr"); if(e) e.textContent = msg; }
+function val(id){ var e = document.getElementById(id); return e ? e.value : ""; }
+
+/* =====================================================================
+   RENDER
+   ===================================================================== */
+function render(){
+  if(!loaded) return;
+  var h = syncCards();
+  if(TAB === "night") h += viewNight();
+  else if(TAB === "board") h += viewBoard();
+  else if(TAB === "history") h += viewHistory();
+  else h += viewMore();
+  h += '<footer id="syncFoot">' + syncFootHTML() + "</footer>";
+  document.getElementById("app").innerHTML = h;
+  var tabs = [["night","♠","Tonight"],["board","🏆","Leaderboard"],["history","🗓","History"],["more","⚙︎","More"]];
+  document.getElementById("tabs").innerHTML = tabs.map(function(t){
+    return '<button data-act="tab" data-id="' + t[0] + '" class="' + (TAB === t[0] ? "on" : "") + '"><i>' + t[1] + "</i>" + t[2] + "</button>";
+  }).join("");
+}
+
+function syncCards(){
+  if(SYNC.state === "choose")
+    return '<div class="card syncCard"><div class="grow"><b>Two different copies</b><div class="small muted">This device and your account have different games saved.</div></div><button class="btn sm pri" data-act="chooseSheet">Choose</button></div>';
+  if(SYNC.fbReady && !SYNC.user)
+    return '<div class="card syncCard"><div class="grow"><b>Sync is off</b><div class="small muted">Sign in to share games across iPhone, iPad and PC.</div></div><button class="btn sm" data-act="signInSheet">Turn on sync</button></div>';
+  return "";
+}
+
+/* ---------- Tonight ---------- */
+function viewNight(){
+  var n = VIEW_NIGHT ? N(VIEW_NIGHT) : openNight();
+  if(VIEW_NIGHT && !n){ VIEW_NIGHT = null; n = openNight(); }
+  if(!n) return viewHome();
+  var live = n.status === "open", rows = nightRows(n.id), tt = totals(rows);
+  if(!live) rows.sort(function(a,b){ return b.net - a.net; });
+  else rows.sort(function(a,b){ return (a.done - b.done) || (a.joined - b.joined); });
+  var playing = rows.filter(function(r){ return !r.done; }).length;
+  var h = "";
+  if(VIEW_NIGHT) h += '<button class="link small" data-act="backHistory">‹ History</button>';
+  h += '<div class="top"><h1>' + esc(n.name || "Poker night") + '</h1><button class="btn sm" data-act="editNight" data-id="' + n.id + '">Edit</button></div>';
+  h += '<div class="card felt"><div class="row"><span class="pill ' + (live ? "live" : "final") + '">' + (live ? "● LIVE" : "FINAL") + '</span><span class="small muted">' + niceDate(n.date) + " · buy-in " + money(n.buyIn) + "</span></div>";
+  h += '<div class="stats"><div class="stat"><b>' + money(tt.in) + '</b><span>Total bought in</span></div>' +
+       '<div class="stat"><b>' + money(tt.out) + '</b><span>Cashed out</span></div>' +
+       (live ? '<div class="stat"><b class="gold">' + money(tt.in - tt.out) + '</b><span>On the table</span></div>'
+             : '<div class="stat"><b class="' + (tt.in === tt.out ? "up" : "wtxt") + '">' + (tt.in === tt.out ? "✓" : money(tt.out - tt.in, true)) + '</b><span>' + (tt.in === tt.out ? "Balanced" : "Off by") + "</span></div>") +
+       "</div></div>";
+  h += "<h2>" + (live ? "At the table · " + playing + " playing" : "Results") + "</h2><div class=\"card\">";
+  if(!rows.length) h += '<div class="muted small">No one yet — add players below.</div>';
+  rows.forEach(function(r){
+    var desc = "In " + money(r.in) + (r.rebuys ? " · " + r.rebuys + " rebuy" + (r.rebuys > 1 ? "s" : "") : "");
+    if(r.done) desc += " · out " + money(r.out);
+    h += '<div class="pl"><div class="av">' + esc(initials(pname(r.player))) + '</div>' +
+         '<button class="pl-name" data-act="pDetail" data-id="' + r.player + '" data-n="' + n.id + '"><b>' + esc(pname(r.player)) + "</b><small>" + desc + "</small></button>";
+    if(live && !r.done){
+      h += '<button class="btn sm" data-act="rebuy" data-id="' + r.player + '" data-n="' + n.id + '">+ Rebuy</button>' +
+           '<button class="btn sm pri" data-act="cashSheet" data-id="' + r.player + '" data-n="' + n.id + '">Cash out</button>';
+    }else{
+      h += '<div class="net ' + cls(r.net) + '">' + money(r.net, true) + "</div>";
+      if(live) h += '<button class="btn sm" data-act="rebuy" data-id="' + r.player + '" data-n="' + n.id + '" title="Buy back in">↺</button>';
+    }
+    h += "</div>";
+  });
+  h += "</div>";
+  if(live){
+    h += '<div class="acts"><button class="btn" data-act="addSheet" data-n="' + n.id + '">+ Add player</button><button class="btn pri" data-act="endSheet" data-n="' + n.id + '">End night</button></div>';
+    h += '<p class="small muted" style="text-align:center">Everything saves as you tap. Ending the night adds it to the leaderboard.</p>';
+  }else{
+    h += settleCard(n, rows);
+    h += '<div class="acts"><button class="btn" data-act="reopen" data-n="' + n.id + '">Reopen to fix</button></div>';
+  }
+  return h;
+}
+function settleCard(n, rows){
+  var plan = settlePlan(rows), pd = n.paid || {}, left = 0;
+  var h = '<h2>Settle up</h2><div class="card">';
+  if(!plan.transfers.length) return h + '<div class="muted small">Nobody owes anybody — everyone broke even.</div></div>';
+  if(plan.diff) h += '<div class="warn" style="margin-top:0">Books were off by ' + money(plan.diff, true) + ", so winners' payouts are adjusted pro rata to make it add up.</div>";
+  plan.transfers.forEach(function(t){
+    var k = payKey(t), done = !!pd[k]; if(!done) left++;
+    h += '<div class="pl" style="' + (done ? "opacity:.5" : "") + '"><div class="av">' + esc(initials(pname(t.from))) + '</div><div class="grow"><b' + (done ? ' style="text-decoration:line-through"' : "") + ">" + esc(pname(t.from)) + ' <span class="muted">→</span> ' + esc(pname(t.to)) + '</b><div class="small muted">' + (done ? "Paid" : "owes") + '</div></div><div class="net gold">' + money(t.amt) + '</div><button class="btn sm' + (done ? "" : " pri") + '" data-act="paid" data-n="' + n.id + '" data-k="' + esc(k) + '">' + (done ? "Undo" : "Paid ✓") + "</button></div>";
+  });
+  h += '<div class="row" style="margin-top:10px"><div class="grow small ' + (left ? "muted" : "up") + '">' + (left ? left + " of " + plan.transfers.length + " payment" + (plan.transfers.length > 1 ? "s" : "") + " left" : "All settled ✓") + '</div><button class="btn sm" data-act="shareNight" data-n="' + n.id + '">Share ↗</button></div></div>';
+  return h;
+}
+function viewHome(){
+  var h = '<h1>Poker Night</h1><div class="card felt hero"><div class="big">♠️</div><h3 style="margin:6px 0">No game running</h3><p class="muted small" style="margin:0 0 16px">Start a night to track buy-ins, rebuys and cash-outs.</p><button class="btn pri" data-act="startSheet">Start a night</button></div>';
+  var last = S.nights.filter(function(n){ return n.status === "closed"; }).sort(function(a,b){ return b.date.localeCompare(a.date) || (b.closedAt||0) - (a.closedAt||0); })[0];
+  if(last){
+    var rows = nightRows(last.id).sort(function(a,b){ return b.net - a.net; });
+    h += "<h2>Last night · " + niceDate(last.date, {month:"short", day:"numeric"}) + '</h2><button class="card" style="width:100%;text-align:left" data-act="openNight" data-n="' + last.id + '">';
+    rows.slice(0, 3).forEach(function(r, i){
+      h += '<div class="row" style="padding:4px 0"><span>' + ["🥇","🥈","🥉"][i] + '</span><span class="grow">' + esc(pname(r.player)) + '</span><span class="net ' + cls(r.net) + '">' + money(r.net, true) + "</span></div>";
+    });
+    var ul = unpaidCount(last, rows);
+    h += '<div class="small link" style="margin-top:6px">' + (ul ? "💸 " + ul + " payment" + (ul > 1 ? "s" : "") + " to settle · " : "") + 'See full results ›</div></button>';
+  }
+  var lb = career("all");
+  if(lb.length){
+    h += '<h2>Career leader</h2><button class="card" style="width:100%;text-align:left" data-act="tab" data-id="board"><div class="row"><span style="font-size:24px">👑</span><b class="grow">' + esc(pname(lb[0].player)) + '</b><span class="net ' + cls(lb[0].net) + '">' + money(lb[0].net, true) + "</span></div></button>";
+  }
+  return h;
+}
+
+/* ---------- Leaderboard ---------- */
+function viewBoard(){
+  var years = {}; S.nights.forEach(function(n){ if(n.status === "closed") years[n.date.slice(0,4)] = 1; });
+  var ys = Object.keys(years).sort().reverse();
+  if(LB_YEAR !== "all" && !years[LB_YEAR]) LB_YEAR = "all";
+  var lb = career(LB_YEAR);
+  var h = "<h1>Career earnings</h1>";
+  h += '<div class="chips" style="margin-bottom:14px"><button class="chip ' + (LB_YEAR === "all" ? "on" : "") + '" data-act="lbYear" data-id="all">All-time</button>' +
+       ys.map(function(y){ return '<button class="chip ' + (LB_YEAR === y ? "on" : "") + '" data-act="lbYear" data-id="' + y + '">' + y + "</button>"; }).join("") + "</div>";
+  if(!lb.length) return h + '<div class="card muted">No finished nights yet. End a night and the standings show up here.</div>';
+  var nNights = S.nights.filter(function(n){ return n.status === "closed" && (LB_YEAR === "all" || n.date.slice(0,4) === LB_YEAR); }).length;
+  if(lb.length >= 3){
+    var pod = [lb[1], lb[0], lb[2]], medals = ["🥈","🥇","🥉"];
+    h += '<div class="podium">' + pod.map(function(s, i){
+      return '<button class="pod ' + (i === 1 ? "p1" : "") + '" data-act="careerSheet" data-id="' + s.player + '"><div class="medal">' + medals[i] + "</div><b>" + esc(pname(s.player)) + '</b><div class="net ' + cls(s.net) + '">' + money(s.net, true) + "</div></button>";
+    }).join("") + "</div>";
+  }
+  var max = Math.max.apply(null, lb.map(function(s){ return Math.abs(s.net); }).concat([1]));
+  h += '<div class="card">';
+  lb.forEach(function(s, i){
+    var w = Math.abs(s.net) / max * 50;
+    var bar = s.net >= 0 ? '<i style="left:50%;width:' + w + '%;background:var(--up)"></i>' : '<i style="right:50%;width:' + w + '%;background:var(--down)"></i>';
+    h += '<button class="lb" data-act="careerSheet" data-id="' + s.player + '"><span class="rank">' + (i + 1) + '</span><div class="av">' + esc(initials(pname(s.player))) + '</div><div class="grow"><div class="row"><b class="grow" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(pname(s.player)) + '</b><span class="net ' + cls(s.net) + '">' + money(s.net, true) + '</span></div><div class="small muted">' + s.nights + " night" + (s.nights > 1 ? "s" : "") + " · " + s.wins + "W " + s.losses + "L · best " + money(s.best, true) + '</div><div class="bar">' + bar + "</div></div></button>";
+  });
+  h += "</div>";
+  h += "<h2>Awards</h2>" + awards(lb);
+  var sum = lb.reduce(function(a, s){ return a + s.net; }, 0);
+  h += '<p class="small muted" style="text-align:center">' + nNights + " night" + (nNights === 1 ? "" : "s") + " counted" + (sum ? " · books off by " + money(sum, true) : " · books balance ✓") + "</p>";
+  return h;
+}
+function awards(lb){
+  function top(f, dir){ var b = null; lb.forEach(function(s){ var v = f(s); if(v == null) return; if(!b || (dir > 0 ? v > b.v : v < b.v)) b = {s:s, v:v}; }); return b; }
+  var list = [];
+  var a = top(function(s){ return s.net; }, 1); if(a && a.v > 0) list.push(["👑","Table Captain", a.s, "up " + money(a.v)]);
+  a = top(function(s){ return s.net; }, -1); if(a && a.v < 0) list.push(["🏧","The ATM", a.s, "down " + money(-a.v)]);
+  a = top(function(s){ return s.best; }, 1); if(a && a.v > 0) list.push(["🔥","Biggest Heater", a.s, money(a.v, true) + " in one night"]);
+  a = top(function(s){ return s.rebuys; }, 1); if(a && a.v > 0) list.push(["🔁","Rebuy King", a.s, a.v + " rebuys"]);
+  a = top(function(s){ return s.worst; }, -1); if(a && a.v < 0) list.push(["💀","Worst Beat", a.s, money(a.v, true) + " in one night"]);
+  a = top(function(s){ return s.nights; }, 1); if(a) list.push(["🪑","Regular", a.s, a.v + " nights played"]);
+  a = top(function(s){ return s.nights >= 3 ? s.wins / s.nights : null; }, 1); if(a && a.v > 0) list.push(["🎯","Most Consistent", a.s, Math.round(a.v * 100) + "% winning nights"]);
+  return '<div class="awards">' + list.map(function(x){ return '<div class="award"><div class="e">' + x[0] + '</div><span>' + x[1] + "</span><b>" + esc(pname(x[2].player)) + "</b><span>" + x[3] + "</span></div>"; }).join("") + "</div>";
+}
+
+/* ---------- History ---------- */
+function viewHistory(){
+  var idx = byNight();
+  var list = S.nights.slice().sort(function(a,b){ return b.date.localeCompare(a.date) || b.created - a.created; });
+  var h = '<div class="top"><h1>History</h1>' + (openNight() ? "" : '<button class="btn sm pri" data-act="startSheet">+ New night</button>') + "</div>";
+  if(!list.length) return h + '<div class="card muted">No nights yet.</div>';
+  h += '<div class="card">';
+  list.forEach(function(n){
+    var rows = nightRows(n.id, idx), tt = totals(rows), best = rows.slice().sort(function(a,b){ return b.net - a.net; })[0];
+    var d = new Date(n.date + "T12:00:00");
+    h += '<button class="hist" data-act="openNight" data-n="' + n.id + '"><div class="date"><b>' + d.getDate() + "</b><span>" + d.toLocaleDateString(undefined, {month:"short"}) + '</span></div><div class="grow"><b>' + esc(n.name || "Poker night") + "</b> " + (n.status === "open" ? '<span class="pill live">LIVE</span>' : "") +
+         '<div class="small muted">' + rows.length + " players · pot " + money(tt.in) + (n.status === "closed" && best && best.net > 0 ? " · 🏆 " + esc(pname(best.player)) + " " + money(best.net, true) : "") + (n.status === "closed" && unpaidCount(n, rows) ? ' · <span class="gold">💸 ' + unpaidCount(n, rows) + " to settle</span>" : "") + (n.status === "closed" && tt.in !== tt.out ? ' · <span style="color:var(--warn)">off ' + money(tt.out - tt.in, true) + "</span>" : "") + "</div></div><span class=\"muted\">›</span></button>";
+  });
+  return h + "</div>";
+}
+
+/* ---------- More ---------- */
+function viewMore(){
+  var lbAll = {}; career("all").forEach(function(s){ lbAll[s.player] = s.net; });
+  var h = "<h1>More</h1><h2>Players</h2><div class=\"card\">";
+  var ps = S.players.slice().sort(function(a,b){ return a.name.localeCompare(b.name); });
+  if(!ps.length) h += '<div class="muted small">Players get added when you start a night.</div>';
+  ps.forEach(function(p){
+    var net = lbAll[p.id] || 0;
+    h += '<div class="pl"><div class="av">' + esc(initials(p.name)) + '</div><div class="grow"><b>' + esc(p.name) + '</b></div><span class="net ' + cls(net) + '">' + money(net, true) + '</span><button class="btn sm" data-act="playerSheet" data-id="' + p.id + '">Edit</button></div>';
+  });
+  h += '</div><button class="btn block" data-act="newPlayerSheet">+ Add player</button>';
+  h += '<h2>Game settings</h2><div class="card"><div class="two"><div class="field"><label>Default buy-in</label><input id="setBuy" inputmode="decimal" value="' + dollars(S.settings.buyIn) + '" data-chg="setBuy"></div><div class="field"><label>Currency symbol</label><input id="setCur" maxlength="4" value="' + esc(S.settings.cur) + '" data-chg="setCur"></div></div><div class="small muted">Rebuys default to the night\'s buy-in.</div></div>';
+  h += "<h2>Sync</h2><div class=\"card\">";
+  if(SYNC.user) h += '<div class="row"><div class="grow"><b>Signed in</b><div class="small muted">' + esc(SYNC.user.email || "") + '</div></div><button class="btn sm" data-act="signOut">Sign out on this device</button></div>';
+  else if(SYNC.fbFailed) h += '<div class="small muted">Sync can\'t load right now (offline?). Your games are saved on this device.</div>';
+  else h += '<div class="row"><div class="grow small muted">Not signed in — games are saved on this device only.</div><button class="btn sm" data-act="signInSheet">Turn on sync</button></div>';
+  h += "</div>";
+  h += '<h2>Backup</h2><div class="card"><div class="acts" style="margin-top:0"><button class="btn" data-act="exportJSON">Export JSON</button><button class="btn" data-act="importJSON">Import JSON</button></div><input type="file" id="impFile" accept="application/json,.json" hidden></div>';
+  return h;
+}
+
+/* =====================================================================
+   ACTIONS
+   ===================================================================== */
+var ACT = {};
+ACT.tab = function(el){ TAB = el.dataset.id; if(TAB === "night") VIEW_NIGHT = null; render(); window.scrollTo(0, 0); };
+ACT.closeSheet = closeSheet;
+ACT.undo = function(){ if(toastUndo){ var f = toastUndo; toastUndo = null; f(); } document.getElementById("toast").hidden = true; };
+ACT.lbYear = function(el){ LB_YEAR = el.dataset.id; render(); };
+ACT.openNight = function(el){ var n = N(el.dataset.n); VIEW_NIGHT = n && n.status === "open" ? null : el.dataset.n; TAB = "night"; render(); window.scrollTo(0, 0); };
+ACT.backHistory = function(){ VIEW_NIGHT = null; TAB = "history"; render(); };
+
+/* start a night */
+ACT.startSheet = function(){
+  if(openNight()){ TAB = "night"; VIEW_NIGHT = null; render(); return; }
+  var regs = career("all").map(function(s){ return s.player; });
+  var ps = S.players.slice().sort(function(a,b){ var ia = regs.indexOf(a.id), ib = regs.indexOf(b.id); ia = ia < 0 ? 1e9 : ia; ib = ib < 0 ? 1e9 : ib; return ia - ib || a.name.localeCompare(b.name); });
+  openSheet('<h3>Start a night</h3><div class="sub">Pick who\'s playing. Everyone starts with one buy-in.</div>' +
+    '<div class="two"><div class="field"><label>Date</label><input type="date" id="sDate" value="' + today() + '"></div><div class="field"><label>Buy-in (' + esc(S.settings.cur) + ')</label><input id="sBuy" inputmode="decimal" value="' + dollars(S.settings.buyIn) + '"></div></div>' +
+    '<div class="field"><label>Name (optional)</label><input id="sName" placeholder="Casino night"></div>' +
+    '<div class="field"><label>Players</label><div class="chips" id="sChips">' + ps.map(function(p){ return '<button class="chip" data-act="tog" data-id="' + p.id + '">' + esc(p.name) + "</button>"; }).join("") + "</div></div>" +
+    '<div class="row"><input id="sNew" placeholder="New player name" enterkeyhint="done"><button class="btn" data-act="startAddNew">Add</button></div>' +
+    '<div class="err" id="sErr"></div><div class="acts"><button class="btn" data-act="closeSheet">Cancel</button><button class="btn pri" data-act="startNight">Deal ’em</button></div>');
+};
+ACT.tog = function(el){ el.classList.toggle("on"); };
+ACT.startAddNew = function(){
+  var inp = document.getElementById("sNew"), name = inp.value.trim().replace(/\s+/g, " ");
+  if(!name) return;
+  var box = document.getElementById("sChips"), found = null;
+  box.querySelectorAll(".chip").forEach(function(c){ if(c.textContent.toLowerCase() === name.toLowerCase()) found = c; });
+  if(found){ found.classList.add("on"); }
+  else{ var b = document.createElement("button"); b.className = "chip on"; b.dataset.act = "tog"; b.dataset.new = name; b.textContent = name; box.appendChild(b); }
+  inp.value = ""; inp.focus();
+};
+ACT.startNight = function(){
+  var date = val("sDate") || today(), buy = toCents(val("sBuy"));
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(date)) return sheetErr("Pick a date.");
+  if(buy == null || buy <= 0) return sheetErr("Enter a buy-in amount.");
+  if(val("sNew").trim()) ACT.startAddNew();
+  var picks = Array.prototype.slice.call(document.querySelectorAll("#sChips .chip.on"));
+  if(picks.length < 2) return sheetErr("Pick at least 2 players.");
+  var n = {id:uid(), date:date, name:val("sName").trim() || "Poker night", buyIn:buy, status:"open", created:Date.now()};
+  S.nights.push(n);
+  picks.forEach(function(c, i){
+    var p = c.dataset.new ? findOrCreatePlayer(c.dataset.new) : P(c.dataset.id);
+    if(p){ var t = addTx(n, p.id, "buyin", buy); t.t += i; }
+  });
+  S.settings.buyIn = buy;
+  VIEW_NIGHT = null; TAB = "night";
+  closeSheet(); commit();
+};
+
+/* add a player mid-game */
+ACT.addSheet = function(el){
+  var n = N(el.dataset.n); if(!n) return;
+  var at = {}; nightRows(n.id).forEach(function(r){ at[r.player] = 1; });
+  var ps = S.players.filter(function(p){ return !at[p.id]; }).sort(function(a,b){ return a.name.localeCompare(b.name); });
+  openSheet('<h3>Add a player</h3><div class="sub">They buy in for ' + money(n.buyIn) + ". Tap a name.</div>" +
+    (ps.length ? '<div class="chips" style="margin-bottom:12px">' + ps.map(function(p){ return '<button class="chip" data-act="addPlayer" data-id="' + p.id + '" data-n="' + n.id + '">' + esc(p.name) + "</button>"; }).join("") + "</div>" : "") +
+    '<div class="row"><input id="aNew" placeholder="New player name"><button class="btn pri" data-act="addPlayer" data-n="' + n.id + '">Add</button></div><div class="field" style="margin-top:12px"><label>Buy-in for this player (' + esc(S.settings.cur) + ')</label><input id="aAmt" inputmode="decimal" value="' + dollars(n.buyIn) + '"></div><div class="err" id="sErr"></div>');
+};
+ACT.addPlayer = function(el){
+  var n = N(el.dataset.n); if(!n) return;
+  var amt = toCents(val("aAmt")); if(amt == null) return sheetErr("Enter a buy-in amount.");
+  var p = el.dataset.id ? P(el.dataset.id) : findOrCreatePlayer(val("aNew"));
+  if(!p) return sheetErr("Type a name or tap a player.");
+  if(nightRows(n.id).some(function(r){ return r.player === p.id; })) return sheetErr(p.name + " is already at the table — use Rebuy.");
+  addTx(n, p.id, "buyin", amt);
+  closeSheet(); commit(); toast(p.name + " bought in for " + money(amt));
+};
+
+/* one-tap rebuy with undo */
+ACT.rebuy = function(el){
+  var n = N(el.dataset.n); if(!n || n.status !== "open") return;
+  var t = addTx(n, el.dataset.id, "rebuy", n.buyIn);
+  commit();
+  toast("Rebuy " + money(n.buyIn) + " · " + pname(el.dataset.id), function(){
+    S.txns = S.txns.filter(function(x){ return x.id !== t.id; }); commit();
+  });
+};
+
+/* cash out */
+ACT.cashSheet = function(el){
+  var n = N(el.dataset.n), pid = el.dataset.id; if(!n) return;
+  var r = nightRows(n.id).find(function(x){ return x.player === pid; }); if(!r) return;
+  openSheet('<h3>Cash out ' + esc(pname(pid)) + '</h3><div class="sub">They\'re in for ' + money(r.in) + ". How much did they hand back in chips?</div>" +
+    '<div class="field"><label>Chips returned (' + esc(S.settings.cur) + ')</label><input id="cAmt" inputmode="decimal" placeholder="0" autofocus></div>' +
+    '<div class="chips"><button class="chip" data-act="cashQuick" data-v="0">Busted · ' + money(0) + '</button><button class="chip" data-act="cashQuick" data-v="' + dollars(r.in) + '">Broke even · ' + money(r.in) + '</button><button class="chip" data-act="cashQuick" data-v="' + dollars(r.in * 2) + '">Doubled · ' + money(r.in * 2) + "</button></div>" +
+    '<div id="cPrev" class="small muted" style="margin-top:10px"></div><div class="err" id="sErr"></div>' +
+    '<div class="acts"><button class="btn" data-act="closeSheet">Cancel</button><button class="btn pri" data-act="cashOut" data-id="' + pid + '" data-n="' + n.id + '" data-in="' + r.in + '">Save</button></div>');
+  var inp = document.getElementById("cAmt");
+  inp.addEventListener("input", function(){ var c = toCents(inp.value), p = document.getElementById("cPrev"); p.innerHTML = c == null ? "" : 'Night result: <b class="' + cls(c - r.in) + '">' + money(c - r.in, true) + "</b>"; });
+  setTimeout(function(){ try{ inp.focus(); }catch(e){} }, 50);
+};
+ACT.cashQuick = function(el){ var i = document.getElementById("cAmt"); i.value = el.dataset.v; i.dispatchEvent(new Event("input")); };
+ACT.cashOut = function(el){
+  var n = N(el.dataset.n), c = toCents(val("cAmt"));
+  if(c == null) return sheetErr("Enter the chips returned (0 if busted).");
+  addTx(n, el.dataset.id, "cashout", c);
+  closeSheet(); commit();
+  var net = c - (+el.dataset.in);
+  toast(pname(el.dataset.id) + " " + (net >= 0 ? "won " : "lost ") + money(Math.abs(net)));
+};
+
+/* a player's moves tonight — edit amounts, delete mistakes */
+ACT.pDetail = function(el){ playerNightSheet(el.dataset.id, el.dataset.n); };
+function playerNightSheet(pid, nid){
+  var n = N(nid); if(!n) return;
+  var live = n.status === "open", tx = nightTx(nid).filter(function(t){ return t.player === pid; });
+  var r = nightRows(nid).find(function(x){ return x.player === pid; });
+  var lbl = {buyin:"Buy-in", rebuy:"Rebuy", cashout:"Cash-out"};
+  var h = "<h3>" + esc(pname(pid)) + '</h3><div class="sub">' + esc(n.name) + " · " + niceDate(n.date, {month:"short", day:"numeric"}) + (r ? ' · <b class="' + cls(r.net) + '">' + (r.done ? money(r.net, true) : "in for " + money(r.in)) + "</b>" : "") + "</div>";
+  if(!tx.length) h += '<div class="muted">Nothing recorded.</div>';
+  tx.forEach(function(t){
+    h += '<div class="tx"><div class="grow"><b>' + lbl[t.kind] + '</b><div class="small muted">' + clock(t.t) + "</div></div>" +
+         (live ? '<input inputmode="decimal" value="' + dollars(t.amt) + '" data-chg="txAmt" data-id="' + t.id + '"><button class="x" data-act="txDel" data-id="' + t.id + '" data-p="' + pid + '" data-n="' + nid + '" aria-label="Delete">✕</button>'
+               : '<b>' + money(t.amt) + "</b>") + "</div>";
+  });
+  h += '<div class="small muted" style="margin-top:10px">' + (live ? "Change an amount and it saves. ✕ removes a mistake." : "Reopen the night to make changes.") + "</div>";
+  h += '<div class="acts">' + (live && r && r.done ? '<button class="btn" data-act="rebuyFromSheet" data-id="' + pid + '" data-n="' + nid + '">Buy back in</button>' : "") + '<button class="btn pri" data-act="closeSheet">Done</button></div>';
+  openSheet(h);
+}
+ACT.txDel = function(el){
+  var t = S.txns.find(function(x){ return x.id === el.dataset.id; }); if(!t) return;
+  S.txns = S.txns.filter(function(x){ return x.id !== t.id; });
+  commit(); playerNightSheet(el.dataset.p, el.dataset.n);
+  toast("Removed", function(){ S.txns.push(t); commit(); });
+};
+ACT.rebuyFromSheet = function(el){ closeSheet(); ACT.rebuy(el); };
+
+/* end the night */
+ACT.endSheet = function(el){
+  var n = N(el.dataset.n); if(!n) return;
+  var rows = nightRows(n.id), tt = totals(rows), still = rows.filter(function(r){ return !r.done; });
+  var h = '<h3>End the night?</h3><div class="sub">Final results go on the career leaderboard.</div>';
+  if(still.length){
+    h += '<div class="warn">Still at the table: <b>' + still.map(function(r){ return esc(pname(r.player)); }).join(", ") + "</b>. Cash them out first so their chips are counted.</div>";
+    h += '<div class="acts"><button class="btn pri" data-act="closeSheet">OK</button></div>';
+    return openSheet(h);
+  }
+  h += tt.in === tt.out ? '<div class="ok">Books balance — ' + money(tt.in) + " in, " + money(tt.out) + " out ✓</div>"
+                        : '<div class="warn">Chips out (' + money(tt.out) + ") don\'t match money in (" + money(tt.in) + "), off by <b>" + money(tt.out - tt.in, true) + "</b>. Double-check a count, or end anyway.</div>";
+  h += '<table class="res">' + rows.sort(function(a,b){ return b.net - a.net; }).map(function(r, i){ return "<tr><td>" + (i === 0 && r.net > 0 ? "🏆 " : "") + esc(pname(r.player)) + '</td><td class="net ' + cls(r.net) + '">' + money(r.net, true) + "</td></tr>"; }).join("") + "</table>";
+  h += '<div class="acts"><button class="btn" data-act="closeSheet">Not yet</button><button class="btn pri" data-act="endNight" data-n="' + n.id + '">End night</button></div>';
+  openSheet(h);
+};
+ACT.endNight = function(el){
+  var n = N(el.dataset.n); if(!n) return;
+  n.status = "closed"; n.closedAt = Date.now();
+  VIEW_NIGHT = n.id;
+  closeSheet(); commit(); window.scrollTo(0, 0);
+  toast("Saved to the leaderboard 🏆");
+};
+ACT.reopen = function(el){
+  var n = N(el.dataset.n); if(!n) return;
+  var other = openNight();
+  if(other && other.id !== n.id){ toast("End “" + other.name + "” first"); return; }
+  n.status = "open"; delete n.closedAt; VIEW_NIGHT = null; commit();
+};
+
+/* settle up: tick payments, share summary */
+ACT.paid = function(el){
+  var n = N(el.dataset.n); if(!n) return;
+  var pd = Object.assign({}, n.paid || {}), k = el.dataset.k;
+  if(pd[k]) delete pd[k]; else pd[k] = Date.now();
+  n.paid = pd; commit();
+};
+ACT.shareNight = function(el){
+  var n = N(el.dataset.n); if(!n) return;
+  var rows = nightRows(n.id).sort(function(a,b){ return b.net - a.net; }), plan = settlePlan(rows);
+  var txt = "♠ " + n.name + " — " + niceDate(n.date, {weekday:"short", month:"short", day:"numeric"}) + "\n\nResults:\n" +
+    rows.map(function(r){ return pname(r.player) + " " + money(r.net, true); }).join("\n") +
+    (plan.transfers.length ? "\n\nSettle up:\n" + plan.transfers.map(function(t){ return pname(t.from) + " → " + pname(t.to) + " " + money(t.amt); }).join("\n") : "");
+  if(navigator.share) navigator.share({text:txt}).catch(function(){});
+  else if(navigator.clipboard) navigator.clipboard.writeText(txt).then(function(){ toast("Copied — paste it in the group chat"); }, function(){ prompt("Copy this:", txt); });
+  else prompt("Copy this:", txt);
+};
+
+/* edit / delete a night */
+ACT.editNight = function(el){
+  var n = N(el.dataset.id); if(!n) return;
+  openSheet('<h3>Edit night</h3><div class="sub">&nbsp;</div><div class="field"><label>Name</label><input id="eName" value="' + esc(n.name) + '"></div>' +
+    '<div class="two"><div class="field"><label>Date</label><input type="date" id="eDate" value="' + n.date + '"></div><div class="field"><label>Buy-in / rebuy (' + esc(S.settings.cur) + ')</label><input id="eBuy" inputmode="decimal" value="' + dollars(n.buyIn) + '"></div></div>' +
+    '<div class="small muted">Changing the buy-in only affects new rebuys. Edit past amounts by tapping a player.</div><div class="err" id="sErr"></div>' +
+    '<div class="acts"><button class="btn danger" data-act="delNight" data-id="' + n.id + '">Delete night</button><button class="btn pri" data-act="saveNight" data-id="' + n.id + '">Save</button></div>');
+};
+ACT.saveNight = function(el){
+  var n = N(el.dataset.id), d = val("eDate"), b = toCents(val("eBuy"));
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(d)) return sheetErr("Pick a date.");
+  if(b == null || b <= 0) return sheetErr("Enter a buy-in amount.");
+  n.name = val("eName").trim() || "Poker night"; n.buyIn = b;
+  if(d !== n.date){ n.date = d; S.txns.forEach(function(t){ if(t.night === n.id) t.date = d; }); }
+  closeSheet(); commit();
+};
+ACT.delNight = function(el){
+  var n = N(el.dataset.id); if(!n) return;
+  if(!confirm("Delete “" + n.name + "” and everything recorded in it? This can't be undone.")) return;
+  S.nights = S.nights.filter(function(x){ return x.id !== n.id; });
+  S.txns = S.txns.filter(function(t){ return t.night !== n.id; });
+  VIEW_NIGHT = null; closeSheet(); commit();
+};
+
+/* career detail */
+ACT.careerSheet = function(el){
+  var pid = el.dataset.id, idx = byNight(), pts = [], run = 0;
+  S.nights.filter(function(n){ return n.status === "closed" && (LB_YEAR === "all" || n.date.slice(0,4) === LB_YEAR); })
+    .sort(function(a,b){ return a.date.localeCompare(b.date) || a.created - b.created; })
+    .forEach(function(n){ var r = nightRows(n.id, idx).find(function(x){ return x.player === pid; }); if(r){ run += r.net; pts.push({n:n, net:r.net, run:run, rebuys:r.rebuys}); } });
+  var s = career(LB_YEAR).find(function(x){ return x.player === pid; }) || {net:0, nights:0, wins:0, losses:0, rebuys:0, in:0};
+  var h = "<h3>" + esc(pname(pid)) + '</h3><div class="sub">' + (LB_YEAR === "all" ? "All-time" : LB_YEAR) + ' · <b class="' + cls(s.net) + '">' + money(s.net, true) + "</b></div>";
+  h += '<div class="stats" style="margin-top:0"><div class="stat"><b>' + s.nights + '</b><span>Nights</span></div><div class="stat"><b>' + s.wins + "–" + s.losses + '</b><span>Up–down nights</span></div><div class="stat"><b>' + money(s.in) + '</b><span>Total bought in</span></div></div>';
+  h += sparkline(pts);
+  h += '<table class="res" style="margin-top:10px">' + pts.slice().reverse().map(function(p){ return "<tr><td>" + niceDate(p.n.date, {month:"short", day:"numeric", year:"2-digit"}) + ' <span class="small muted">' + esc(p.n.name) + (p.rebuys ? " · " + p.rebuys + "× rebuy" : "") + '</span></td><td class="net ' + cls(p.net) + '">' + money(p.net, true) + "</td></tr>"; }).join("") + "</table>";
+  h += '<div class="acts"><button class="btn pri" data-act="closeSheet">Done</button></div>';
+  openSheet(h);
+};
+function sparkline(pts){
+  if(pts.length < 2) return "";
+  var W = 320, H = 90, vals = [0].concat(pts.map(function(p){ return p.run; }));
+  var mn = Math.min.apply(null, vals), mx = Math.max.apply(null, vals); if(mx === mn){ mx += 1; mn -= 1; }
+  function x(i){ return 6 + i * (W - 12) / (vals.length - 1); }
+  function y(v){ return 6 + (mx - v) * (H - 12) / (mx - mn); }
+  var d = vals.map(function(v, i){ return (i ? "L" : "M") + x(i).toFixed(1) + " " + y(v).toFixed(1); }).join(" ");
+  var last = vals[vals.length - 1], col = last >= 0 ? "var(--up)" : "var(--down)";
+  return '<div class="small muted" style="margin:14px 0 4px">Running total</div><svg viewBox="0 0 ' + W + " " + H + '" width="100%" height="' + H + '" style="display:block"><line x1="0" x2="' + W + '" y1="' + y(0) + '" y2="' + y(0) + '" stroke="var(--line)" stroke-dasharray="4 4"/><path d="' + d + '" fill="none" stroke="' + col + '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/><circle cx="' + x(vals.length - 1) + '" cy="' + y(last) + '" r="4" fill="' + col + '"/></svg>';
+}
+
+/* players */
+ACT.newPlayerSheet = function(){
+  openSheet('<h3>Add player</h3><div class="sub">&nbsp;</div><div class="field"><input id="npName" placeholder="Name"></div><div class="err" id="sErr"></div><div class="acts"><button class="btn" data-act="closeSheet">Cancel</button><button class="btn pri" data-act="newPlayer">Add</button></div>');
+  setTimeout(function(){ try{ document.getElementById("npName").focus(); }catch(e){} }, 50);
+};
+ACT.newPlayer = function(){ var p = findOrCreatePlayer(val("npName")); if(!p) return sheetErr("Type a name."); closeSheet(); commit(); };
+ACT.playerSheet = function(el){
+  var p = P(el.dataset.id); if(!p) return;
+  var used = S.txns.some(function(t){ return t.player === p.id; });
+  openSheet('<h3>Edit player</h3><div class="sub">&nbsp;</div><div class="field"><label>Name</label><input id="ppName" value="' + esc(p.name) + '"></div><div class="err" id="sErr"></div>' +
+    (used ? '<div class="small muted">Has game history, so can\'t be deleted.</div>' : "") +
+    '<div class="acts">' + (used ? "" : '<button class="btn danger" data-act="delPlayer" data-id="' + p.id + '">Delete</button>') + '<button class="btn pri" data-act="savePlayer" data-id="' + p.id + '">Save</button></div>');
+};
+ACT.savePlayer = function(el){
+  var p = P(el.dataset.id), name = val("ppName").trim().replace(/\s+/g, " ");
+  if(!name) return sheetErr("Type a name.");
+  if(S.players.some(function(x){ return x.id !== p.id && x.name.toLowerCase() === name.toLowerCase(); })) return sheetErr("Someone already has that name.");
+  p.name = name; closeSheet(); commit();
+};
+ACT.delPlayer = function(el){ S.players = S.players.filter(function(x){ return x.id !== el.dataset.id; }); closeSheet(); commit(); };
+
+/* backup */
+ACT.exportJSON = function(){
+  var blob = new Blob([JSON.stringify(S, null, 1)], {type:"application/json"});
+  var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "poker-night-" + today() + ".json";
+  document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+};
+ACT.importJSON = function(){
+  var f = document.getElementById("impFile");
+  f.onchange = function(){
+    var file = f.files[0]; if(!file) return;
+    file.text().then(function(txt){
+      var d = JSON.parse(txt);
+      if(!d || !Array.isArray(d.nights) || !Array.isArray(d.txns)) throw new Error("bad");
+      if(!confirm("Replace everything here with " + d.nights.length + " nights from this file?")) return;
+      d = normalize(d);
+      S.settings = d.settings; S.players = d.players; S.nights = d.nights; S.txns = d.txns;
+      VIEW_NIGHT = null; commit(); toast("Imported");
+    }).catch(function(){ alert("That file isn't a Poker Night backup."); });
+    f.value = "";
+  };
+  f.click();
+};
+
+/* sync / sign-in */
+ACT.signInSheet = function(){
+  if(!window.FB){ toast("Sync can't load right now — try again online"); return; }
+  openSheet('<h3>Turn on sync</h3><div class="sub">Use the same email and password on your iPhone, iPad and PC.</div>' +
+    '<div class="field"><label>Email</label><input id="siEmail" type="email" autocomplete="username" autocapitalize="off"></div>' +
+    '<div class="field"><label>Password</label><input id="siPw" type="password" autocomplete="current-password"></div><div class="err" id="sErr"></div>' +
+    '<div class="acts"><button class="btn" data-act="signUp">Create account</button><button class="btn pri" data-act="signIn">Sign in</button></div>' +
+    '<div style="text-align:center;margin-top:12px"><button class="link small" data-act="resetPw">Forgot password?</button></div>');
+};
+ACT.signIn = function(){ FB.signIn(FB.auth, val("siEmail").trim(), val("siPw")).then(closeSheet).catch(function(e){ sheetErr(errText(e)); }); };
+ACT.signUp = function(){ FB.signUp(FB.auth, val("siEmail").trim(), val("siPw")).then(closeSheet).catch(function(e){ sheetErr(errText(e)); }); };
+ACT.resetPw = function(){
+  var em = val("siEmail").trim(); if(!em) return sheetErr("Type your email first.");
+  FB.reset(FB.auth, em).then(function(){ sheetErr(""); toast("Reset email sent"); }).catch(function(e){ sheetErr(errText(e)); });
+};
+ACT.signOut = function(){ if(window.FB && confirm("Sign out on this device? Your games stay saved here.")) FB.signOut(FB.auth); };
+ACT.chooseSheet = function(){
+  if(!SYNC.choice) return;
+  var R = assemble(SYNC.choice).st;
+  function sum(st){ var last = st.nights.map(function(n){ return n.date; }).sort().pop(); return st.nights.length + " nights · " + st.players.length + " players" + (last ? " · latest " + niceDate(last, {month:"short", day:"numeric", year:"numeric"}) : ""); }
+  openSheet('<h3>Which copy to keep?</h3><div class="sub">This device and your account have different games.</div>' +
+    '<div class="card"><b>Your account (cloud)</b><div class="small muted">' + sum(R) + '</div></div>' +
+    '<div class="card"><b>This device</b><div class="small muted">' + sum(S) + "</div></div>" +
+    '<button class="btn pri block" data-act="takeCloud">Use the cloud copy</button><div class="small muted" style="margin:6px 0 12px;text-align:center">This device\'s copy is kept as a backup.</div>' +
+    '<button class="btn block" data-act="claimLocal">Upload this device\'s copy instead</button>');
+};
+ACT.takeCloud = function(){ var m = SYNC.choice; closeSheet(); if(m) takeCloud(m); };
+ACT.claimLocal = function(){ var m = SYNC.choice; closeSheet(); if(m) claimLocal(m); };
+
+/* settings inputs + transaction amount edits */
+var CHG = {
+  setBuy: function(el){ var c = toCents(el.value); if(c && c > 0){ S.settings.buyIn = c; save(); } else el.value = dollars(S.settings.buyIn); },
+  setCur: function(el){ S.settings.cur = el.value.trim() || "$"; commit(); },
+  txAmt: function(el){
+    var t = S.txns.find(function(x){ return x.id === el.dataset.id; }), c = toCents(el.value);
+    if(!t) return; if(c == null){ el.value = dollars(t.amt); return; }
+    t.amt = c; commit(); el.value = dollars(c);
+  }
+};
+
+document.addEventListener("click", function(e){
+  var el = e.target.closest("[data-act]"); if(!el) return;
+  var f = ACT[el.dataset.act]; if(f){ e.preventDefault(); f(el); }
+});
+document.addEventListener("change", function(e){
+  var el = e.target.closest("[data-chg]"); if(!el) return;
+  var f = CHG[el.dataset.chg]; if(f) f(el);
+});
+document.addEventListener("keydown", function(e){
+  if(e.key !== "Enter") return;
+  var id = e.target.id;
+  if(id === "sNew"){ e.preventDefault(); ACT.startAddNew(); }
+  else if(id === "aNew"){ e.preventDefault(); var b = document.querySelector('#sheet [data-act="addPlayer"]:not([data-id])'); if(b) ACT.addPlayer(b); }
+  else if(id === "cAmt"){ e.preventDefault(); var c = document.querySelector('#sheet [data-act="cashOut"]'); if(c) ACT.cashOut(c); }
+  else if(id === "siPw"){ e.preventDefault(); ACT.signIn(); }
+  else if(id === "npName"){ e.preventDefault(); ACT.newPlayer(); }
+});
+</script>
+
+<script>
+/* =====================================================================
+   SYNC ENGINE — offline-first, record-level merge over Firestore
+   From SYNCED-APP-PLAYBOOK Appendix A, configured for Poker Night.
+   ===================================================================== */
+var APP = {
+  stateKey: "poker_state_v1",
+  prefix:   "poker_",
+  collection: function(uid){ return ["users", uid, "poker_chunks"]; },
+  fields:   ["settings"],
+  coreCols: ["players"],
+  yearCols: ["nights", "txns"],
+  derived:  function(col, r){ return false; },
+  isEmpty:  function(st){ return !st.nights.length && !st.players.length; },
+  normalize: function(st){ return normalize(st); },
+  afterApply: function(){},
+  render: function(){ render(); },
+  writeLocal: function(txt){}
+};
+
+var SYNC = {state:"idle", err:"", user:null, ready:false, unsub:null, cloud:{}, latest:null,
+            hold:false, deferred:false, choice:null, fbReady:false, fbFailed:false};
+var KEEP_GONE = 180 * 86400000;
+function lsGet(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
+function lsSet(k,v){ try{ if(v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); }catch(e){} }
+function newId(){ return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+var DEVICE = lsGet(APP.prefix + "device") || (function(){ var d = newId(); lsSet(APP.prefix + "device", d); return d; })();
+var SYNC_FLAG = APP.prefix + "sync_uid", META_KEY = APP.prefix + "sync_meta";
+var ALLCOLS = APP.coreCols.concat(APP.yearCols);
+
+var M = (function(){ try{ var o = JSON.parse(lsGet(META_KEY)); if(o && o.m && o.gone) return o; }catch(e){} return {m:{}, gone:{}}; })();
+var LASTREC = null;
+function saveMeta(){ lsSet(META_KEY, JSON.stringify(M)); }
+
+function colList(st, col){ return (st[col] || []).filter(function(r){ return r && r.id != null && !APP.derived(col, r); }); }
+function recMap(st){
+  var out = {};
+  APP.fields.forEach(function(f){ out[f] = JSON.stringify(st[f] || {}); });
+  ALLCOLS.forEach(function(col){ colList(st, col).forEach(function(r){ out[col + ":" + r.id] = JSON.stringify(r); }); });
+  return out;
+}
+function trackLocal(st){
+  var now = recMap(st), t = Date.now(), k;
+  if(!LASTREC){ LASTREC = now; return; }
+  for(k in now) if(now[k] !== LASTREC[k]){ M.m[k] = t; delete M.gone[k]; }
+  for(k in LASTREC) if(!(k in now)){ M.gone[k] = t; delete M.m[k]; }
+  LASTREC = now; saveMeta();
+}
+
+function yearOf(s){ return "y" + (/^\d{4}/.test(s || "") ? s.slice(0,4) : "0000"); }
+function emptyYear(){ var y = {m:{}}; APP.yearCols.forEach(function(c){ y[c] = []; }); return y; }
+var EMPTY_YEAR = JSON.stringify(emptyYear());
+function chunksOf(st, meta){
+  var core = {m:{}, gone:meta.gone || {}};
+  APP.fields.forEach(function(f){ core[f] = st[f] || {}; if(meta.m[f]) core.m[f] = meta.m[f]; });
+  APP.coreCols.forEach(function(col){
+    core[col] = colList(st, col);
+    core[col].forEach(function(r){ var k = col + ":" + r.id; if(meta.m[k]) core.m[k] = meta.m[k]; });
+  });
+  var out = {core: JSON.stringify(core)}, yrs = {};
+  APP.yearCols.forEach(function(col){
+    colList(st, col).forEach(function(r){
+      var y = yrs[yearOf(r.date)] || (yrs[yearOf(r.date)] = emptyYear()), k = col + ":" + r.id;
+      y[col].push(r); if(meta.m[k]) y.m[k] = meta.m[k];
+    });
+  });
+  Object.keys(yrs).forEach(function(y){ out[y] = JSON.stringify(yrs[y]); });
+  return out;
+}
+function assemble(map){
+  var o = {st:{}, m:{}, gone:{}};
+  APP.fields.forEach(function(f){ o.st[f] = {}; });
+  ALLCOLS.forEach(function(c){ o.st[c] = []; });
+  if(map.core){ try{ var c = JSON.parse(map.core);
+    APP.fields.forEach(function(f){ o.st[f] = c[f] || {}; });
+    APP.coreCols.forEach(function(col){ o.st[col] = c[col] || []; });
+    o.gone = c.gone || {}; if(c.m) Object.keys(c.m).forEach(function(k){ o.m[k] = c.m[k]; }); }catch(e){} }
+  var at = {};
+  Object.keys(map).filter(function(k){ return k !== "core"; }).sort().forEach(function(key){
+    var y; try{ y = JSON.parse(map[key]); }catch(e){ return; }
+    var ym = y.m || {};
+    APP.yearCols.forEach(function(col){
+      (y[col] || []).forEach(function(r){
+        if(!r || r.id == null) return;
+        var k = col + ":" + r.id, m = ym[k] || 0;
+        if(k in at){ if(m > (o.m[k] || 0)){ o.st[col][at[k]] = r; o.m[k] = m; } return; }
+        at[k] = o.st[col].length; o.st[col].push(r); if(m) o.m[k] = m;
+      });
+    });
+  });
+  return o;
+}
+function mergeAll(L, R){
+  var out = {st:{}, m:{}, gone:{}};
+  APP.fields.forEach(function(f){
+    var lt = L.m[f] || 0, rt = R.m[f] || 0;
+    out.st[f] = rt >= lt ? R.st[f] : L.st[f];
+    if(Math.max(lt, rt)) out.m[f] = Math.max(lt, rt);
+  });
+  ALLCOLS.forEach(function(col){
+    var li = {}, ri = {}, order = [];
+    colList(R.st, col).forEach(function(r){ if(!(r.id in ri)){ ri[r.id] = r; order.push(r.id); } });
+    colList(L.st, col).forEach(function(r){ if(!(r.id in li)){ li[r.id] = r; if(!(r.id in ri)) order.push(r.id); } });
+    out.st[col] = [];
+    order.forEach(function(id){
+      var k = col + ":" + id, lr = li[id], rr = ri[id];
+      var lm = lr ? (L.m[k] || 0) : -1, rm = rr ? (R.m[k] || 0) : -1, best, bm = Math.max(lm, rm);
+      if(lm > rm) best = lr; else if(rm > lm) best = rr;
+      else best = rr || lr;
+      var g = Math.max(L.gone[k] || -1, R.gone[k] || -1);
+      if(g >= 0 && g >= bm){ out.gone[k] = g; return; }
+      out.st[col].push(best); if(bm > 0) out.m[k] = bm;
+    });
+  });
+  var cut = Date.now() - KEEP_GONE;
+  [L.gone, R.gone].forEach(function(G){
+    Object.keys(G).forEach(function(k){
+      if(G[k] < cut || out.m[k] !== undefined) return;
+      var alive = ALLCOLS.some(function(col){
+        return k.indexOf(col + ":") === 0 && out.st[col].some(function(r){ return String(r.id) === k.slice(col.length + 1); });
+      });
+      if(!alive) out.gone[k] = Math.max(out.gone[k] || 0, G[k]);
+    });
+  });
+  return out;
+}
+function sameRecords(a, b){
+  var x = recMap(a), y = recMap(b), kx = Object.keys(x).sort();
+  return kx.join("|") === Object.keys(y).sort().join("|") && kx.every(function(k){ return x[k] === y[k]; });
+}
+
+function cloudAfterSave(){ trackLocal(S); if(SYNC.ready) pushNow(); }
+
+function writeLocal(){
+  var txt = JSON.stringify(S);
+  lsSet(APP.stateKey, txt); APP.writeLocal(txt);
+  LASTREC = recMap(S); saveMeta();
+}
+function pushNow(){
+  var FB = window.FB;
+  if(!SYNC.ready || !FB || !SYNC.user) return;
+  var local = chunksOf(S, M), ids = {}, k, changed = [];
+  for(k in local) ids[k] = 1;
+  for(k in SYNC.cloud) ids[k] = 1;
+  Object.keys(ids).forEach(function(id){
+    var j = local[id] || (id === "core" ? null : EMPTY_YEAR);
+    if(j != null && SYNC.cloud[id] !== j) changed.push([id, j]);
+  });
+  if(!changed.length) return;
+  var batch = FB.writeBatch(FB.db), prev = {}, path = APP.collection(SYNC.user.uid);
+  changed.forEach(function(c){
+    prev[c[0]] = SYNC.cloud[c[0]]; SYNC.cloud[c[0]] = c[1];
+    batch.set(FB.doc.apply(null, [FB.db].concat(path, [c[0]])), {json:c[1], at:FB.serverTimestamp(), dev:DEVICE});
+  });
+  setSync(navigator.onLine === false ? "offline" : "saving");
+  batch.commit().then(function(){
+    if(SYNC.state === "saving" || SYNC.state === "offline") setSync("synced");
+  }).catch(function(e){
+    Object.keys(prev).forEach(function(id){ if(prev[id] === undefined) delete SYNC.cloud[id]; else SYNC.cloud[id] = prev[id]; });
+    setSync("error", errText(e));
+  });
+}
+function mergeFromCloud(map, push){
+  SYNC.cloud = Object.assign({}, map);
+  var merged = mergeAll({st:S, m:M.m, gone:M.gone}, assemble(map));
+  M = {m:merged.m, gone:merged.gone};
+  if(!sameRecords(merged.st, S)){
+    APP.fields.concat(ALLCOLS).forEach(function(k){ S[k] = merged.st[k]; });
+    S = APP.normalize(S); APP.afterApply(); writeLocal(); APP.render();
+  }else saveMeta();
+  if(push) pushNow();
+}
+function onChunks(snap){
+  var map = {};
+  snap.docs.forEach(function(d){ var x = d.data(); if(x && typeof x.json === "string") map[d.id] = x.json; });
+  SYNC.latest = {map:map, fromCache:snap.metadata.fromCache};
+  if(SYNC.ready && !snap.metadata.fromCache && !snap.metadata.hasPendingWrites) setSync("synced");
+  if(SYNC.hold){ SYNC.deferred = true; return; }
+  processLatest();
+}
+function knownDevice(){ return !!SYNC.user && lsGet(SYNC_FLAG) === SYNC.user.uid; }
+function processLatest(){
+  var L = SYNC.latest;
+  if(!L || !SYNC.user) return;
+  if(!SYNC.ready){
+    if(SYNC.choice){ SYNC.choice = L.map; return; }
+    if(L.fromCache && !knownDevice()) return;
+    return firstSync(L.map, !L.fromCache);
+  }
+  mergeFromCloud(L.map, !L.fromCache);
+}
+function releaseHold(){ SYNC.hold = false; if(SYNC.deferred){ SYNC.deferred = false; processLatest(); } }
+function goLive(){
+  SYNC.ready = true; SYNC.choice = null; lsSet(SYNC_FLAG, SYNC.user.uid);
+  setSync(navigator.onLine === false ? "offline" : "synced");
+}
+function firstSync(map, fromServer){
+  if(!Object.keys(map).length){
+    if(!fromServer) return;
+    SYNC.cloud = {}; goLive(); pushNow(); APP.render(); return;
+  }
+  var R = assemble(map);
+  if(knownDevice() || APP.isEmpty(S) || sameRecords(R.st, S)){ goLive(); mergeFromCloud(map, fromServer); APP.render(); return; }
+  SYNC.choice = map; setSync("choose"); APP.render();
+}
+function backupLocal(){ lsSet(APP.stateKey + "_before_sync", JSON.stringify(S)); }
+function takeCloud(map){
+  backupLocal();
+  var R = assemble(map);
+  APP.fields.concat(ALLCOLS).forEach(function(k){ S[k] = R.st[k]; });
+  S = APP.normalize(S); M = {m:R.m, gone:R.gone}; APP.afterApply(); writeLocal();
+  SYNC.cloud = Object.assign({}, map); goLive(); APP.render();
+}
+function claimLocal(map){
+  var R = assemble(map), t = Date.now(), mine = recMap(S), k;
+  for(k in mine) M.m[k] = t;
+  Object.keys(recMap(R.st)).forEach(function(key){ if(!(key in mine)){ M.gone[key] = t; delete M.m[key]; } });
+  SYNC.cloud = Object.assign({}, map); saveMeta(); goLive(); pushNow(); APP.render();
+}
+function onAuth(user){
+  if(SYNC.unsub){ try{ SYNC.unsub(); }catch(e){} SYNC.unsub = null; }
+  SYNC.user = user || null; SYNC.ready = false; SYNC.cloud = {}; SYNC.latest = null; SYNC.choice = null; SYNC.deferred = false;
+  if(!user){ setSync("signedout"); APP.render(); return; }
+  setSync("connecting"); APP.render();
+  var FB = window.FB;
+  SYNC.unsub = FB.onSnapshot(FB.collection.apply(null, [FB.db].concat(APP.collection(user.uid))),
+    {includeMetadataChanges:true}, onChunks, function(e){ setSync("error", errText(e)); });
+}
+function initSync(){ if(SYNC.fbReady || !window.FB) return; SYNC.fbReady = true; window.FB.onAuthStateChanged(window.FB.auth, onAuth); }
+window.addEventListener("fb-ready", function(){ if(LASTREC) initSync(); });
+window.addEventListener("fb-failed", function(){ SYNC.fbFailed = true; setSync("unavailable"); });
+window.addEventListener("online",  function(){ if(SYNC.ready) setSync("saving"); });
+window.addEventListener("offline", function(){ if(SYNC.ready) setSync("offline"); });
+
+function setSync(state, msg){
+  SYNC.state = state; SYNC.err = msg || "";
+  var f = document.getElementById("syncFoot"); if(f) f.innerHTML = syncFootHTML();
+}
+function syncFootHTML(){
+  return ({
+    synced: "Synced across your devices", saving: "Syncing…", connecting: "Connecting to your account…",
+    offline: "Offline — saved here, will sync when you’re back online",
+    choose: "Waiting for you to pick which copy to keep", error: "Sync problem: " + SYNC.err,
+    signedout: "Saved on this device only", unavailable: "Saved on this device · sync will reconnect when you’re online"
+  })[SYNC.state] || "Saved on this device";
+}
+function errText(e){
+  var M2 = {
+    "auth/invalid-credential":"Email or password is wrong.", "auth/wrong-password":"Email or password is wrong.",
+    "auth/user-not-found":"No account with that email yet — tap Create account.",
+    "auth/invalid-email":"That email doesn’t look right.",
+    "auth/email-already-in-use":"That email already has an account — tap Sign in instead.",
+    "auth/weak-password":"Use at least 6 characters.", "auth/missing-password":"Type your password.",
+    "auth/too-many-requests":"Too many tries. Wait a few minutes and try again.",
+    "auth/network-request-failed":"No connection. Try again when you’re online.",
+    "auth/operation-not-allowed":"Email sign-in isn’t switched on in Firebase yet.",
+    "auth/admin-restricted-operation":"New sign-ups are switched off for this app.",
+    "permission-denied":"the database rules are blocking this account — check the Firestore rules.",
+    "unavailable":"can’t reach the server right now.",
+    "resource-exhausted":"today’s free limit is used up; it resets overnight."
+  };
+  var c = (e && e.code) || "";
+  return M2[c] || (e && e.message ? String(e.message).replace(/^Firebase:\s*/, "") : "something went wrong.");
+}
+
+/* ---------- startup ---------- */
+loaded = true;
+LASTREC = recMap(S);
+render();
+if(window.FB) initSync(); else if(window.FB_FAILED){ SYNC.fbFailed = true; setSync("unavailable"); }
+
+if("serviceWorker" in navigator && location.protocol === "https:"){
+  window.addEventListener("load", function(){ navigator.serviceWorker.register("sw.js").catch(function(){}); });
+}
+</script>
+
+<script type="module">
+/* Firebase loads separately so the app still opens if it can't be reached */
+const B = "https://www.gstatic.com/firebasejs/10.12.2/";
+const firebaseConfig = {
+  apiKey: "AIzaSyAJukAbdNRHeW5Md3K3CQqpImuWXAWbaak",
+  authDomain: "expense-tracker-d03fa.firebaseapp.com",
+  projectId: "expense-tracker-d03fa",
+  storageBucket: "expense-tracker-d03fa.firebasestorage.app",
+  messagingSenderId: "220193394976",
+  appId: "1:220193394976:web:c71e0f514405adab228745"
+};
+try{
+  const [appM, authM, fsM] = await Promise.all([
+    import(B + "firebase-app.js"), import(B + "firebase-auth.js"), import(B + "firebase-firestore.js")]);
+  const app = appM.initializeApp(firebaseConfig);
+  const auth = authM.getAuth(app);
+  let db;
+  try{
+    db = fsM.initializeFirestore(app, {localCache: fsM.persistentLocalCache({tabManager: fsM.persistentMultipleTabManager()})});
+  }catch(e){ db = fsM.getFirestore(app); }
+  window.FB = {
+    auth, db,
+    onAuthStateChanged: authM.onAuthStateChanged,
+    signIn: authM.signInWithEmailAndPassword,
+    signUp: authM.createUserWithEmailAndPassword,
+    reset: authM.sendPasswordResetEmail,
+    signOut: authM.signOut,
+    collection: fsM.collection, doc: fsM.doc, writeBatch: fsM.writeBatch,
+    onSnapshot: fsM.onSnapshot, serverTimestamp: fsM.serverTimestamp
+  };
+  window.dispatchEvent(new Event("fb-ready"));
+}catch(e){
+  window.FB_FAILED = true;
+  window.dispatchEvent(new Event("fb-failed"));
+}
+</script>
+</body>
+</html>
